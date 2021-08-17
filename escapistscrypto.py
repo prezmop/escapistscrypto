@@ -8,12 +8,15 @@ from pathlib import Path
 import argparse
 import blowfish
 
-def decrypt(ifile, ofile, key = b"mothking"):
+def decrypt(ifile, ofile, strip_null = True, key = b"mothking"):
 	ifile.seek(0,0)
 	ciphertext = ifile.read()
 
 	cipher = blowfish.Cipher(key, byte_order = "little")
 	plaintext = b"".join(cipher.decrypt_ecb(ciphertext))
+
+	if strip_null:
+		plaintext = plaintext.rstrip(b"\0")
 
 	ofile.write(plaintext)
 
@@ -40,11 +43,11 @@ def cli():
 	parser.add_argument("-i", "--input", help="specify input file", required=True)
 	parser.add_argument("-o", "--output", help="specify output file")
 	parser.add_argument("-f", "--force", help="force, will overwrite any existing output file", action='store_true')
+	parser.add_argument("-n", "--keep-null", help="keep tailing null bytes in a decrypted file", action='store_true')
 
 	args = parser.parse_args()
 
 	ipath = Path(args.input)
-
 
 	if args.output:
 		ofile = args.output
@@ -75,7 +78,7 @@ def cli():
 			parser.error(errmsg)
 
 	if args.decrypt:
-		decrypt(ifile,ofile)
+		decrypt(ifile,ofile, not args.keep_null)
 	elif args.encrypt:
 		encrypt(ifile,ofile)
 	else:
