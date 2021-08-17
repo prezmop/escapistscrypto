@@ -9,15 +9,12 @@ import argparse
 import blowfish
 
 def decrypt(ifile, ofile, key = b"mothking"):
-	#read file
 	ifile.seek(0,0)
 	ciphertext = ifile.read()
 
-	#decrypt
 	cipher = blowfish.Cipher(key, byte_order = "little")
 	plaintext = b"".join(cipher.decrypt_ecb(ciphertext))
 
-	#save the decrypted version
 	ofile.write(plaintext)
 
 def encrypt(ifile, ofile, key = b"mothking"):
@@ -28,11 +25,9 @@ def encrypt(ifile, ofile, key = b"mothking"):
 
 	plaintext = ifile.read() + bytes((8 - size) % 8)
 
-	#encrypt
 	cipher = blowfish.Cipher(key, byte_order = "little")
 	ciphertext = b"".join(cipher.encrypt_ecb(plaintext))
 
-	#save the encrypted version
 	ofile.write(ciphertext)
 
 def cli():
@@ -54,7 +49,6 @@ def cli():
 	if args.output:
 		ofile = args.output
 	else:
-		#add _decr to file name
 		if args.decrypt:
 			app = "_decr"
 		elif args.encrypt:
