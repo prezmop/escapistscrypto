@@ -5,6 +5,7 @@
 # check the end of this file for license information
 
 from pathlib import Path
+from hashlib import md5
 import argparse
 import blowfish
 
@@ -32,6 +33,10 @@ def encrypt(ifile, ofile, key = b"mothking"):
 	ciphertext = b"".join(cipher.encrypt_ecb(plaintext))
 
 	ofile.write(ciphertext)
+
+def hash(path):
+	hashString = "l0l_" + str(path.stat().st_size)
+	return md5(hashString.encode("UTF8")).hexdigest()
 
 def cli():
 	parser = argparse.ArgumentParser(description="Decrypt or encrypt escapists files")
