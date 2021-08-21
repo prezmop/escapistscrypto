@@ -6,6 +6,7 @@
 
 from pathlib import Path
 from hashlib import md5
+from configparser import ConfigParser
 import argparse
 import blowfish
 
@@ -37,6 +38,20 @@ def encrypt(ifile, ofile, key = b"mothking"):
 def hash(path):
 	hashString = "l0l_" + str(path.stat().st_size)
 	return md5(hashString.encode("UTF8")).hexdigest()
+
+def create_config_parser(file):
+	#data files contain unmarked comments before the first section
+	#that need to be skipped before passing it to a ConfigParser object
+	while True:
+		pos = file.tell()
+		if file.readline().strip()[0] == "[":
+			break
+	file.seek(pos)
+
+	parser = ConfigParser()
+	parser.read_file(file)
+
+	return parser
 
 def cli():
 	parser = argparse.ArgumentParser(description="Decrypt or encrypt escapists files")
