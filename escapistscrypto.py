@@ -57,7 +57,7 @@ def create_config_parser(file):
 
 	return parser
 
-def make_valid(orig_val_file, validate_dir):
+def make_valid(orig_val_file, validate_dir, force):
 	if not validate_dir.is_dir():
 		raise NotADirectoryError
 
@@ -77,7 +77,12 @@ def make_valid(orig_val_file, validate_dir):
 
 		hashes["Val"][lang[0]] = "_".join(langhashes)
 
-	with validate_dir.joinpath("val.dat").open("w",encoding="UTF-16") as file:
+	if force:
+		mode = "w"
+	else:
+		mode = "x"
+
+	with validate_dir.joinpath("val.dat").open(mode,encoding="UTF-16") as file:
 		hashes.write(file,space_around_delimiters=False)
 
 def open_ifile(ipath):
@@ -129,7 +134,11 @@ def cli_val(args):
 		errmsg = ipath.name + " doesn't exist"
 		raise ValueError(errmsg)
 
-	make_valid(valfile, path)
+	try:
+		make_valid(valfile, path, args.force)
+	except FileExistsError:
+		errmsg = "val.dat file already exists in the directory! use -f to overwrite it"
+		raise ValueError(errmsg)
 
 def cli():
 	parser = argparse.ArgumentParser(description="Decrypt or encrypt escapists files")
