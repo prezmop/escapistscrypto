@@ -57,6 +57,29 @@ def create_config_parser(file):
 
 	return parser
 
+def make_valid(orig_val_file, validate_dir):
+	if not validate_dir.is_dir():
+		raise NotADirectoryError
+
+	languages = ["eng","fre","ger","spa","rus","pol","ita"]
+	files = ["data","items","speech"]
+	hashlookup = {"data":0,"items":1,"speech":2}
+
+	hashes = create_config_parser(orig_val_file)
+
+	for lang in languages:
+		langhashes = hashes["Val"][lang[0]].split("_")
+
+		for file in files:
+			filepath = validate_dir.joinpath(file + "_" + lang + ".dat")
+			if filepath.is_file():
+				langhashes[hashlookup[file]] = hash(filepath)
+
+		hashes["Val"][lang[0]] = "_".join(langhashes)
+
+	with validate_dir.joinpath("val.dat").open("w",encoding="UTF-16") as file:
+		hashes.write(file,space_around_delimiters=False)
+
 def cli():
 	parser = argparse.ArgumentParser(description="Decrypt or encrypt escapists files")
 
