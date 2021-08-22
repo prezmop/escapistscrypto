@@ -44,7 +44,11 @@ def create_config_parser(file):
 	#that need to be skipped before passing it to a ConfigParser object
 	while True:
 		pos = file.tell()
-		if file.readline().strip()[0] == "[":
+		line = file.readline()
+		if not line:
+			raise EOFError("The file doesn't appear to be valid")
+		line = line.strip()
+		if line and line[0] == "[":
 			break
 	file.seek(pos)
 
