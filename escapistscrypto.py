@@ -80,57 +80,88 @@ def make_valid(orig_val_file, validate_dir):
 	with validate_dir.joinpath("val.dat").open("w",encoding="UTF-16") as file:
 		hashes.write(file,space_around_delimiters=False)
 
-def cli():
-	parser = argparse.ArgumentParser(description="Decrypt or encrypt escapists files")
-
-	mode = parser.add_mutually_exclusive_group(required=True)
-	mode.add_argument("-D", "--decrypt", help="decrypt file", action='store_true')
-	mode.add_argument("-E", "--encrypt", help="encrypt file", action='store_true')
-
-	parser.add_argument("-i", "--input", help="specify input file", required=True)
-	parser.add_argument("-o", "--output", help="specify output file")
-	parser.add_argument("-f", "--force", help="force, will overwrite any existing output file", action='store_true')
-	parser.add_argument("-n", "--keep-null", help="keep tailing null bytes in a decrypted file", action='store_true')
-
-	args = parser.parse_args()
-
-	ipath = Path(args.input)
-
-	if args.output:
-		ofile = args.output
-	else:
-		if args.decrypt:
-			app = "_decr"
-		elif args.encrypt:
-			app = "_encr"
-		else:
-			#how did we get here?
-			raise RuntimeError()
-
-		opath = ipath.with_stem(ipath.stem + app)
-
+def open_ifile(ipath):
 	try:
 		ifile = ipath.open("rb")
 	except FileNotFoundError:
 		errmsg = ipath.name + " doesn't exist"
-		parser.error(errmsg)
+		raise ValueError(errmsg)
+	return ifile
 
-	if args.force:
+def open_ofile(opath,force):
+	if force:
 		ofile = opath.open("wb")
 	else:
 		try:
 			ofile = opath.open("xb")
 		except FileExistsError:
 			errmsg = opath.name + " already exists! use -f to overwrite it"
-			parser.error(errmsg)
+			raise ValueError(errmsg)
+	return ofile
 
-	if args.decrypt:
-		decrypt(ifile,ofile, not args.keep_null)
-	elif args.encrypt:
-		encrypt(ifile,ofile)
+def cli_dec(args):
+	ipath = Path(args.input)
+
+	if args.output:
+		opath = Path(args.output)
 	else:
-		#how did we get here?
-		raise RuntimeError()
+		opath = ipath.with_stem(ipath.stem + "_decr")
+
+	decrypt(open_ifile(ipath),open_ofile(opath,args.force), not args.keep_null)
+
+def cli_enc(args):
+	ipath = Path(args.input)
+
+	if args.output:
+		opath = Path(args.output)
+	else:
+		opath = ipath.with_stem(ipath.stem + "_encr")
+
+	encrypt(open_ifile(ipath),open_ofile(opath,args.force))
+
+def cli_val(args):
+	valpath = Path(args.val_base)
+	path = Path(args.path)
+
+	try:
+		valfile = valpath.open("r",encoding="UTF-16")
+	except FileNotFoundError:
+		errmsg = ipath.name + " doesn't exist"
+		raise ValueError(errmsg)
+
+	make_valid(valfile, path)
+
+def cli():
+	parser = argparse.ArgumentParser(description="Decrypt or encrypt escapists files")
+
+	fileio = argparse.ArgumentParser(add_help=False)
+
+	fileio.add_argument("input", help="specify input file")
+	fileio.add_argument("-o", "--output", help="specify output file")
+	fileio.add_argument("-f", "--force", help="will overwrite any existing output file", action='store_true')
+
+	modes = parser.add_subparsers()
+
+	decrypt  = modes.add_parser("dec", help="decrypt file", parents=[fileio])
+	encrypt  = modes.add_parser("enc", help="encrypt file", parents=[fileio])
+	validate = modes.add_parser("val", help="create a valid val.dat for modified text files")
+
+	decrypt.add_argument("-n", "--keep-null", help="keep tailing null bytes in a decrypted file", action='store_true')
+	decrypt.set_defaults(func=cli_dec)
+
+	encrypt.set_defaults(func=cli_enc)
+
+	validate.add_argument("path", help="specify path to directory with text files")
+	validate.add_argument("val_base", help="specify path to an original val.dat file")
+	validate.add_argument("-f", "--force", help="will overwrite any existing val.dat file", action='store_true')
+	validate.set_defaults(func=cli_val)
+
+	args = parser.parse_args()
+
+	try:
+		args.func(args)
+	except ValueError as exc:
+		parser.error(exc.args[0])
 
 if __name__ == "__main__":
 	cli()
