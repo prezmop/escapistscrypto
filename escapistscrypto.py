@@ -47,7 +47,7 @@ def create_config_parser(file):
 		line = file.readline()
 		if not line:
 			raise EOFError("The file doesn't appear to be valid")
-		line = line.strip()
+		line = line.lstrip()
 		if line and line[0] == "[":
 			break
 	file.seek(pos)
