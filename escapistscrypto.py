@@ -104,38 +104,38 @@ def open_ofile(opath,force):
 			raise ValueError(errmsg)
 	return ofile
 
-def cli_dec(args):
-	ipath = Path(args.input)
+def cli_dec(input, output = None, force = False, keep_null = False):
+	ipath = Path(input)
 
-	if args.output:
-		opath = Path(args.output)
+	if output:
+		opath = Path(output)
 	else:
 		opath = ipath.with_stem(ipath.stem + "_decr")
 
-	decrypt(open_ifile(ipath),open_ofile(opath,args.force), not args.keep_null)
+	decrypt(open_ifile(ipath),open_ofile(opath,force), not keep_null)
 
-def cli_enc(args):
-	ipath = Path(args.input)
+def cli_enc(input, output = None, force = False):
+	ipath = Path(input)
 
-	if args.output:
-		opath = Path(args.output)
+	if output:
+		opath = Path(output)
 	else:
 		opath = ipath.with_stem(ipath.stem + "_encr")
 
-	encrypt(open_ifile(ipath),open_ofile(opath,args.force))
+	encrypt(open_ifile(ipath),open_ofile(opath,force))
 
-def cli_val(args):
-	valpath = Path(args.val_base)
-	path = Path(args.path)
+def cli_val(path , val_base, force = False):
+	valpath = Path(val_base)
+	dirpath = Path(path)
 
 	try:
 		valfile = valpath.open("r",encoding="UTF-16")
 	except FileNotFoundError:
-		errmsg = ipath.name + " doesn't exist"
+		errmsg = valpath.name + " doesn't exist"
 		raise ValueError(errmsg)
 
 	try:
-		make_valid(valfile, path, args.force)
+		make_valid(valfile, dirpath, force)
 	except FileExistsError:
 		errmsg = "val.dat file already exists in the directory! use -f to overwrite it"
 		raise ValueError(errmsg)
@@ -165,10 +165,15 @@ def cli():
 	validate.add_argument("-f", "--force", help="will overwrite any existing val.dat file", action='store_true')
 	validate.set_defaults(func=cli_val)
 
-	args = parser.parse_args()
+	args = vars(parser.parse_args())
+
+	if not args:
+		parser.error("no arguments")
+
+	func = args.pop("func")
 
 	try:
-		args.func(args)
+		func(**args)
 	except ValueError as exc:
 		parser.error(exc.args[0])
 
