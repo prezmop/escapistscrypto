@@ -9,7 +9,7 @@ a simple program allowing for encryption and decryption of files form "The Escap
 
 
 ### Encrypt/decrypt
-files can be decrypted by running the program like shown below
+Files can be decrypted by running the program like shown below
 ```sh
 $ escapistscrypto.py dec tiles_perks.gif
 $ escapistscrypto.py dec tiles_perks.gif -o custom_name.gif
@@ -22,7 +22,7 @@ $ escapistscrypto.py enc tiles_perks.gif -o custom_name.gif
 ```
 
 ### Validate
-If you want to validate custom data/items/speech files, first lay the files out like this:
+In order to validate custom data/items/speech files, first lay the files out like this:
 ```
 somedir
 ├─custom_files
